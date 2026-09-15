@@ -1,0 +1,18 @@
+﻿# compiled YARA rules
+*.yrc
+*.yarc
+
+# never commit samples or binaries
+tests/goodware/*
+!tests/goodware/.gitkeep
+tests/samples/
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
