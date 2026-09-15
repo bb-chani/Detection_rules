@@ -1,0 +1,27 @@
+title: Suspicious File Download via Certutil
+id: 8f2b4c91-6d3e-4a7f-9b1c-2e5d8a0f3c47
+status: experimental
+description: Detects certutil.exe being used to download a file from a remote host, a common living-off-the-land technique for staging payloads.
+references:
+    - https://lolbas-project.github.io/lolbas/Binaries/Certutil/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.command-and-control
+    - attack.t1105
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith: '\certutil.exe'
+        - OriginalFileName: 'CertUtil.exe'
+    selection_cli:
+        CommandLine|contains:
+            - 'urlcache'
+            - 'verifyctl'
+    condition: all of selection_*
+falsepositives:
+    - Legitimate certificate retrieval by administrative scripts
+level: medium
+
