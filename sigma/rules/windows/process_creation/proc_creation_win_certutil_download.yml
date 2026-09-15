@@ -24,4 +24,3 @@ detection:
 falsepositives:
     - Legitimate certificate retrieval by administrative scripts
 level: medium
-
