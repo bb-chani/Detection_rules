@@ -23,3 +23,19 @@ repos:
         files: ^sigma/rules.*\.ya?ml$
         pass_filenames: false
         args: ['sigma/rules']
+  - repo: local
+    hooks:
+      - id: sigma-check
+        name: sigma check
+        entry: sigma check
+        language: system
+        files: ^sigma/rules.*\.ya?ml$
+        pass_filenames: false
+        args: ['sigma/rules']
+
+      - id: yara-compile
+        name: yara compile
+        entry: python3 -c "import yara,sys,glob; [yara.compile(filepath=f) for f in glob.glob('yara/rules/**/*.yar', recursive=True)]"
+        language: system
+        files: ^yara/rules/.*\.yar$
+        pass_filenames: false
