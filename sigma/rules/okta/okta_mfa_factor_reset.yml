@@ -1,0 +1,29 @@
+title: Okta MFA Factor Reset for User
+id: d0bf1566-b9a1-40e4-b944-2081ef120bad
+status: experimental
+description: |
+    Detects an administrator resetting or deactivating an MFA factor for a user.
+    Attackers with administrative access reset a victim's MFA to enroll their own
+    device, establishing persistence while defeating the second factor.
+references:
+    - https://developer.okta.com/docs/reference/api/event-types/
+    - https://attack.mitre.org/techniques/T1556/006/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.persistence
+    - attack.credential-access
+    - attack.t1556.006
+logsource:
+    product: okta
+    service: okta
+detection:
+    selection:
+        eventtype:
+            - 'user.mfa.factor.reset_all'
+            - 'user.mfa.factor.deactivate'
+    condition: selection
+falsepositives:
+    - Help desk resetting MFA for users who lost or replaced a device
+    - Bulk factor resets during a planned MFA migration
+level: medium
