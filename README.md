@@ -40,6 +40,79 @@ DeviceProcessEvents
 Each backend applies a field-mapping pipeline: Sysmon names for Splunk, ECS for
 Elastic, `DeviceProcessEvents` schema for XDR.
 
+## Custom field mapping
+
+Stock pipelines cover Sysmon, ECS and XDR, but Okta's system log has no built-in
+ECS mapping. [`pipelines/okta_ecs.yml`](pipelines/okta_ecs.yml) supplies one, so
+Okta rules stay written in Okta's own field names and get translated at compile
+time:
+
+```yaml
+eventtype:                    event.action
+actor.alternateId:            user.name
+client.ipAddress:             source.ip
+debugContext.debugData.risk:  okta.debug_context.debug_data.risk_level
+```
+
+`okta_suspicious_session_activity.yml` selects on `eventtype` and Okta's risk
+string. One rule, two backends:
+
+**Splunk** (`-t splunk --without-pipeline`) — raw Okta field names, as the
+platform receives them
+```spl
+eventtype IN ("user.session.start", "user.authentication.auth_via_mfa") debugContext.debugData.risk="*HIGH*"
+```
+
+**Elasticsearch** (`-t lucene -p pipelines/okta_ecs.yml`) — ECS names, plus the
+dataset scope the pipeline adds
+```
+event.dataset:okta.system AND ((event.action:(user.session.start OR user.authentication.auth_via_mfa)) AND okta.debug_context.debug_data.risk_level:*HIGH*)
+```
+
+The Elastic Okta integration parses the raw `level=HIGH reasons=...` string into
+discrete keyword fields, which is why `debugContext.debugData.risk` resolves to
+`risk_level` rather than passing through unchanged. Without the mapping the rule
+still compiles — it just never matches.
+
+## Behavioral YARA
+
+`Webshell_PHP_Generic_Eval` looks for the *shape* of a webshell rather than any
+particular one: request data reaching a code execution function.
+
+```
+condition:
+    filesize < 200KB
+    and $php_open
+    and any of ($exec_*)      // eval, assert, system, shell_exec, passthru
+    and any of ($src_*)       // $_GET, $_POST, $_REQUEST, $_COOKIE
+```
+
+Requiring both halves is what keeps it useful. Every rule ships with a matching
+pair that demonstrates the distinction:
+
+```php
+// tests/logs/webshell_sample.php      -> matches
+<?php eval($_GET["cmd"]); ?>
+
+// tests/goodware/benign_get.php       -> does not match
+<?php echo "Hello, " . $_GET["name"]; ?>
+```
+
+Both read `$_GET`. Only one passes it to an execution sink — a signature on the
+input alone would flag ordinary PHP. The `filesize` bound comes first so the
+condition short-circuits before any string scanning.
+
+CI enforces the pair on every rule: it fails if a rule matches nothing in
+`tests/logs/`, and fails if it matches anything in `tests/goodware/`.
+
+```bash
+yara yara/rules/webshell/webshell_php_generic_eval.yar tests/logs/webshell_sample.php -c   # 1
+yara yara/rules/webshell/webshell_php_generic_eval.yar tests/goodware/benign_get.php -c    # 0
+```
+
+> `tests/logs/` holds live malicious samples by design. Don't execute anything in
+> it, and expect endpoint security to flag it on clone.
+
 ## Repository layout
 
 ```
