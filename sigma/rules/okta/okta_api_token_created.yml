@@ -1,0 +1,26 @@
+title: Okta API Token Created
+id: 49c7fc6c-adba-4040-8abc-e39358e2a3f5
+status: experimental
+description: |
+    Detects creation of an Okta API token. Tokens inherit the permissions of the
+    creating user and are not subject to MFA, so an attacker with an admin session
+    can mint one to retain access after the session ends or credentials are rotated.
+references:
+    - https://developer.okta.com/docs/reference/api/event-types/
+    - https://attack.mitre.org/techniques/T1098/001/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.persistence
+    - attack.t1098.001
+logsource:
+    product: okta
+    service: okta
+detection:
+    selection:
+        eventtype: 'system.api_token.create'
+    condition: selection
+falsepositives:
+    - Planned integration or automation work by platform engineering
+    - Token rotation as part of a scheduled credential lifecycle
+level: medium
