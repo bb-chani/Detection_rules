@@ -48,6 +48,40 @@ jobs:
           find yara/rules -name '*.yar' -print0 \
             | xargs -0 -r -n1 -I{} yarac {} /tmp/compiled.yarc
 
+      - name: Compile index
+        run: yarac yara/index.yar /tmp/index.yarc
+
+      - name: Index must list every rule
+        run: |
+          find yara/rules -name '*.yar' ! -name 'index.yar' \
+            -exec realpath -m --relative-to=. {} \; \
+            | sort -u > /tmp/on-disk.txt
+
+          sed -n 's|^[[:space:]]*include[[:space:]]*"\([^"]*\)".*|yara/\1|p' yara/index.yar \
+            | xargs -r -n1 realpath -m --relative-to=. \
+            | sort -u > /tmp/in-index.txt
+
+          missing=$(comm -23 /tmp/on-disk.txt /tmp/in-index.txt)
+          stale=$(comm -13 /tmp/on-disk.txt /tmp/in-index.txt)
+
+          if [ -n "$missing" ]; then
+            echo "Rules on disk but missing from yara/index.yar:"
+            echo "$missing" | sed 's/^/  /'
+          fi
+
+          if [ -n "$stale" ]; then
+            echo "yara/index.yar includes files that do not exist:"
+            echo "$stale" | sed 's/^/  /'
+          fi
+
+          if [ -n "$missing$stale" ]; then
+            echo
+            echo "Add an include line for each missing rule, or drop the stale ones."
+            exit 1
+          fi
+
+          echo "index lists all $(wc -l < /tmp/on-disk.txt) rule(s)"
+
       - name: True positive must match
         run: |
           for rule in $(find yara/rules -name '*.yar'); do
