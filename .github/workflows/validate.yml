@@ -33,7 +33,7 @@ jobs:
       - name: Convert Okta rules
         run: |
           sigma convert -t splunk --without-pipeline sigma/rules/okta
-          sigma convert -t lucene --without-pipeline sigma/rules/okta
+          sigma convert -t lucene -p pipelines/okta_ecs.yml sigma/rules/okta
   yara:
     name: YARA
     runs-on: ubuntu-latest
