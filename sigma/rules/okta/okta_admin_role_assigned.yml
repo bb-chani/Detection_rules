@@ -1,0 +1,29 @@
+title: Okta Administrator Role Assigned to User
+id: b4fe6a74-e2f8-4619-8023-10db5e06ffc6
+status: experimental
+description: |
+    Detects assignment of an administrator role to an Okta user or group. Privilege
+    escalation via role grant gives an attacker durable administrative access that
+    looks like legitimate configuration rather than a compromised session.
+references:
+    - https://developer.okta.com/docs/reference/api/event-types/
+    - https://attack.mitre.org/techniques/T1098/003/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1098.003
+logsource:
+    product: okta
+    service: okta
+detection:
+    selection:
+        eventtype:
+            - 'user.account.privilege.grant'
+            - 'group.privilege.grant'
+    condition: selection
+falsepositives:
+    - Legitimate onboarding of new administrators
+    - Role changes during team restructuring
+level: high
