@@ -1,0 +1,63 @@
+name: Validate detections
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  sigma:
+    name: Sigma
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install toolchain
+        run: pip install -r requirements.txt
+
+      - name: Validate rule syntax
+        run: sigma check sigma/rules
+
+      - name: Convert to Splunk
+        run: sigma convert -t splunk -p splunk_windows sigma/rules
+
+      - name: Convert to Elasticsearch
+        run: sigma convert -t lucene -p ecs_windows sigma/rules
+
+      - name: Convert to Microsoft XDR
+        run: sigma convert -t kusto -p microsoft_xdr sigma/rules
+
+  yara:
+    name: YARA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install YARA
+        run: sudo apt-get update && sudo apt-get install -y yara
+
+      - name: Compile all rules
+        run: |
+          find yara/rules -name '*.yar' -print0 \
+            | xargs -0 -r -n1 yarac /dev/null
+
+      - name: True positive must match
+        run: |
+          for rule in $(find yara/rules -name '*.yar'); do
+            yara "$rule" tests/logs/ -r || true
+          done
+          matches=$(yara yara/rules/webshell/webshell_php_generic_eval.yar \
+                      tests/logs/webshell_sample.php -c)
+          test "$matches" -gt 0
+
+      - name: False positive must not match
+        run: |
+          matches=$(yara yara/rules/webshell/webshell_php_generic_eval.yar \
+                      tests/goodware/benign_get.php -c)
+          test "$matches" -eq 0
