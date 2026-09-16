@@ -18,6 +18,7 @@ transformations:
       client.geographicalContext.city: source.geo.city_name
       securityContext.asNumber: source.as.number
       securityContext.isProxy: source.as.organization.proxy
+      debugContext.debugData.risk: okta.debug_context.debug_data.risk_level
     rule_conditions:
       - type: logsource
         product: okta
