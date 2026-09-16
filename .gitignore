@@ -1,10 +1,8 @@
-﻿# compiled YARA rules
+# compiled YARA rules
 *.yrc
 *.yarc
 
-# never commit samples or binaries
-tests/goodware/*
-!tests/goodware/.gitkeep
+# local-only sample staging; goodware is committed, see tests/goodware/
 tests/samples/
 
 # python
