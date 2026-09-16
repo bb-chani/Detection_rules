@@ -1,4 +1,4 @@
-﻿# Detection_rules
+# Detection_rules
 
 Vendor-neutral detection content written in [Sigma](https://sigmahq.io/) and
 YARA, with CI validation and multi-backend conversion.
