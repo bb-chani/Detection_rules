@@ -1,0 +1,33 @@
+title: Okta Sign-On Policy or Rule Modified
+id: 77a232c1-fa3c-4acf-b1f2-5ebe18658133
+status: experimental
+description: |
+    Detects modification or deletion of an Okta sign-on policy or policy rule.
+    Weakening authentication policy is a quieter alternative to defeating MFA per
+    user: an attacker with admin access can add a permissive rule or drop a factor
+    requirement, affecting every user the policy covers.
+references:
+    - https://developer.okta.com/docs/reference/api/event-types/
+    - https://attack.mitre.org/techniques/T1556/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.defense-impairment
+    - attack.persistence
+    - attack.t1556
+logsource:
+    product: okta
+    service: okta
+detection:
+    selection:
+        eventtype:
+            - 'policy.lifecycle.update'
+            - 'policy.lifecycle.delete'
+            - 'policy.rule.update'
+            - 'policy.rule.delete'
+            - 'policy.rule.deactivate'
+    condition: selection
+falsepositives:
+    - Planned identity policy changes by platform or IAM engineering
+    - Policy tuning during rollout of a new authentication requirement
+level: high
