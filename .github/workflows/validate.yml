@@ -50,14 +50,20 @@ jobs:
       - name: True positive must match
         run: |
           for rule in $(find yara/rules -name '*.yar'); do
-            yara "$rule" tests/logs/ -r || true
+            total=0
+            for sample in tests/logs/*; do
+              count=$(yara "$rule" "$sample" -c)
+              total=$((total + count))
+            done
+            echo "$rule matched $total sample(s)"
+            test "$total" -gt 0
           done
-          matches=$(yara yara/rules/webshell/webshell_php_generic_eval.yar \
-                      tests/logs/webshell_sample.php -c)
-          test "$matches" -gt 0
 
       - name: False positive must not match
         run: |
-          matches=$(yara yara/rules/webshell/webshell_php_generic_eval.yar \
-                      tests/goodware/benign_get.php -c)
-          test "$matches" -eq 0
+          for rule in $(find yara/rules -name '*.yar'); do
+            for sample in tests/goodware/*; do
+              count=$(yara "$rule" "$sample" -c)
+              test "$count" -eq 0 || { echo "FP: $rule matched $sample"; exit 1; }
+            done
+          done
