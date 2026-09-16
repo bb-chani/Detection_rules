@@ -11,7 +11,7 @@ for three SIEMs.
 
 Detection logic belongs in version control for the same reasons application
 code does: peer review, change history, automated testing, and repeatable
-deployment. Every rule here is linted on commit and validated in CI before merge.
+deployment. Every rule here is linted on commit and validated in CI on every push.
 
 ## One rule, three platforms
 
@@ -87,8 +87,8 @@ condition:
     and any of ($src_*)       // $_GET, $_POST, $_REQUEST, $_COOKIE
 ```
 
-Requiring both halves is what keeps it useful. Every rule ships with a matching
-pair that demonstrates the distinction:
+Requiring both halves is what keeps it useful. Every rule is validated against a
+matching pair that demonstrates the distinction:
 
 ```php
 // tests/logs/webshell_sample.php      -> matches
@@ -115,14 +115,29 @@ yara yara/rules/webshell/webshell_php_generic_eval.yar tests/goodware/benign_get
 
 ## Repository layout
 
+Directories holding content today:
+
 ```
-sigma/rules/              Production Sigma rules, by platform and logsource
+sigma/rules/okta/          Okta system-log rules
+sigma/rules/windows/       Windows process-creation rules
+pipelines/okta_ecs.yml     Okta -> ECS field mapping for the Elastic backend
+yara/rules/webshell/       PHP webshell rules
+yara/index.yar             Entry point including every YARA rule
+tests/logs/                Malicious samples for true-positive validation
+tests/goodware/            Benign samples for false-positive validation
+```
+
+The tree also carries empty directories, kept deliberately so new content has an
+obvious home and so the deprecation workflow in
+[CONTRIBUTING.md](CONTRIBUTING.md) has somewhere to move rules to. They contain
+only a `.gitkeep`:
+
+```
+sigma/rules/aws|azure|gcp/      Further cloud platforms
 sigma/rules-emerging-threats/   Time-boxed rules for active campaigns
-sigma/deprecated/         Retired rules, kept for audit history
-yara/rules/               YARA rules by family: loader, maldoc, webshell
-tests/logs/               Sample telemetry for true-positive validation
-tests/goodware/           Benign samples for false-positive testing
-pipelines/                Custom Sigma field-mapping pipelines
+sigma/deprecated/               Retired Sigma rules, kept for audit history
+yara/rules/loader|maldoc/       Further YARA families
+yara/deprecated/                Retired YARA rules
 ```
 
 ## Usage
@@ -138,10 +153,35 @@ sigma convert -t splunk -p splunk_windows sigma/rules/windows/process_creation/<
 
 ## Quality gates
 
-Commits are gated by [pre-commit](https://pre-commit.com/): YAML syntax
-validation, `sigma check` schema and UUID verification, and
-[detect-secrets](https://github.com/Yelp/detect-secrets) scanning. All commits
-are SSH-signed.
+Two layers run the same checks, locally and again on a clean runner.
+
+**On commit**, via [pre-commit](https://pre-commit.com/):
+
+| Hook | Checks |
+| --- | --- |
+| `check-yaml` | YAML parses |
+| `end-of-file-fixer`, `trailing-whitespace` | Whitespace hygiene |
+| `check-merge-conflict` | No conflict markers |
+| [`detect-secrets`](https://github.com/Yelp/detect-secrets) | No credentials, against `.secrets.baseline` |
+| `sigma check` | Sigma schema, UUIDs, ATT&CK tag validity |
+| `yara compile` | Every rule under `yara/rules/` compiles |
+
+All commits are SSH-signed.
+
+**On push and pull request**, via
+[`validate.yml`](.github/workflows/validate.yml):
+
+*Sigma* — `sigma check sigma/rules`, then conversion of every rule to each
+backend it targets. Windows rules compile to Splunk, Elasticsearch and Microsoft
+XDR; Okta rules to Splunk and to Elasticsearch through
+[`pipelines/okta_ecs.yml`](pipelines/okta_ecs.yml). A rule that cannot be
+expressed on a target backend fails the build.
+
+*YARA* — each rule compiles individually, `yara/index.yar` compiles so every
+include resolves, and the index is checked for completeness: a rule under
+`yara/rules/` with no `include` line fails, as does an `include` pointing at a
+file that no longer exists. Then the sample gates — every rule must match
+something in `tests/logs/` and nothing in `tests/goodware/`.
 
 ## Contributing
 
