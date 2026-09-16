@@ -1,4 +1,4 @@
-﻿# Detection_rules # Detection_rules
+﻿# Detection_rules
 
 Vendor-neutral detection content written in [Sigma](https://sigmahq.io/) and
 YARA, with CI validation and multi-backend conversion.
@@ -22,12 +22,12 @@ mapped to ATT&CK [T1105](https://attack.mitre.org/techniques/T1105/).
 
 **Splunk** (`-t splunk -p splunk_windows`)
 ```spl
-PASTE SPLUNK OUTPUT HERE
+Image="*\\certutil.exe" OR OriginalFileName="CertUtil.exe" CommandLine IN ("*urlcache*", "*verifyctl*")
 ```
 
 **Elasticsearch** (`-t lucene -p ecs_windows`)
 ```
-PASTE LUCENE OUTPUT HERE
+(process.executable.caseless:*\\certutil.exe OR process.pe.original_file_name:CertUtil.exe) AND (process.command_line:(*urlcache* OR *verifyctl*))
 ```
 
 **Microsoft XDR** (`-t kusto -p microsoft_xdr`)
