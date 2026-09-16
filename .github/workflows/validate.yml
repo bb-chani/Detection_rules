@@ -45,13 +45,14 @@ jobs:
       - name: Compile all rules
         run: |
           find yara/rules -name '*.yar' -print0 \
-            | xargs -0 -r -n1 yarac /dev/null
+            | xargs -0 -r -n1 -I{} yarac {} /tmp/compiled.yarc
 
       - name: True positive must match
         run: |
           for rule in $(find yara/rules -name '*.yar'); do
             total=0
             for sample in tests/logs/*; do
+              [ -f "$sample" ] || continue
               count=$(yara "$rule" "$sample" -c)
               total=$((total + count))
             done
@@ -63,6 +64,7 @@ jobs:
         run: |
           for rule in $(find yara/rules -name '*.yar'); do
             for sample in tests/goodware/*; do
+              [ -f "$sample" ] || continue
               count=$(yara "$rule" "$sample" -c)
               test "$count" -eq 0 || { echo "FP: $rule matched $sample"; exit 1; }
             done
