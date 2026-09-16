@@ -23,15 +23,6 @@ repos:
         files: ^sigma/rules.*\.ya?ml$
         pass_filenames: false
         args: ['sigma/rules']
-  - repo: local
-    hooks:
-      - id: sigma-check
-        name: sigma check
-        entry: sigma check
-        language: system
-        files: ^sigma/rules.*\.ya?ml$
-        pass_filenames: false
-        args: ['sigma/rules']
 
       - id: yara-compile
         name: yara compile
