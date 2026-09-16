@@ -24,15 +24,16 @@ jobs:
       - name: Validate rule syntax
         run: sigma check sigma/rules
 
-      - name: Convert to Splunk
-        run: sigma convert -t splunk -p splunk_windows sigma/rules
+      - name: Convert Windows rules
+        run: |
+          sigma convert -t splunk -p splunk_windows sigma/rules/windows
+          sigma convert -t lucene -p ecs_windows sigma/rules/windows
+          sigma convert -t kusto -p microsoft_xdr sigma/rules/windows
 
-      - name: Convert to Elasticsearch
-        run: sigma convert -t lucene -p ecs_windows sigma/rules
-
-      - name: Convert to Microsoft XDR
-        run: sigma convert -t kusto -p microsoft_xdr sigma/rules
-
+      - name: Convert Okta rules
+        run: |
+          sigma convert -t splunk sigma/rules/okta
+          sigma convert -t lucene --without-pipeline sigma/rules/okta
   yara:
     name: YARA
     runs-on: ubuntu-latest
