@@ -1,0 +1,30 @@
+title: Okta Session Flagged as High Risk or Impossible Travel
+id: c6c125b1-d882-4b73-91ad-512008496042
+status: experimental
+description: |
+    Detects authentication events that Okta's behavioral risk engine scored as high
+    risk, including impossible-travel and anomalous-device signals. Surfaces vendor
+    risk scoring into the SIEM rather than recomputing geo-velocity downstream.
+references:
+    - https://developer.okta.com/docs/reference/api/event-types/
+    - https://attack.mitre.org/techniques/T1078/004/
+author: bb-chani
+date: 2026-09-15
+tags:
+    - attack.initial-access
+    - attack.t1078.004
+logsource:
+    product: okta
+    service: okta
+detection:
+    selection_event:
+        eventtype:
+            - 'user.session.start'
+            - 'user.authentication.auth_via_mfa'
+    selection_risk:
+        debugContext.debugData.risk|contains: 'HIGH'
+    condition: all of selection_*
+falsepositives:
+    - VPN or corporate proxy egress that relocates the apparent source
+    - Legitimate travel where sessions overlap across regions
+level: medium
