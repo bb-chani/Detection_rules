@@ -1,0 +1,31 @@
+title: Windows Service Created via sc.exe
+id: 862c40ce-e445-4358-8a52-845ac417dac9
+status: experimental
+description: |
+    Detects service creation through sc.exe. Services run at boot with SYSTEM
+    privileges by default, giving an attacker both persistence and privilege
+    escalation from a single action.
+references:
+    - https://attack.mitre.org/techniques/T1543/003/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1543.003
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith: '\sc.exe'
+        - OriginalFileName: 'sc.exe'
+    selection_create:
+        CommandLine|contains:
+            - ' create '
+            - ' config '
+    condition: all of selection_*
+falsepositives:
+    - Software installation registering a service
+    - Administrative service reconfiguration
+level: low
