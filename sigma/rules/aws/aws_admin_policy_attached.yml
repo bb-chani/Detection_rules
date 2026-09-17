@@ -1,0 +1,32 @@
+title: AWS Administrator Policy Attached to Principal
+id: 26cc99f3-2dc5-491e-be54-733774f6f1f2
+status: experimental
+description: |
+    Detects attachment of a policy granting administrative access to a user, group,
+    or role. IAM privilege escalation is durable and resembles ordinary configuration
+    in the audit log, making it a common step after initial cloud access.
+references:
+    - https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_managed-vs-inline.html
+    - https://attack.mitre.org/techniques/T1098/003/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1098.003
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: 'iam.amazonaws.com'
+        eventName:
+            - 'AttachUserPolicy'
+            - 'AttachRolePolicy'
+            - 'AttachGroupPolicy'
+        requestParameters.policyArn|contains: 'AdministratorAccess'
+    condition: selection
+falsepositives:
+    - Legitimate administrator provisioning
+    - Infrastructure-as-code applying a known role definition
+level: high

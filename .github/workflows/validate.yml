@@ -30,6 +30,11 @@ jobs:
           sigma convert -t lucene -p ecs_windows sigma/rules/windows
           sigma convert -t kusto -p microsoft_xdr sigma/rules/windows
 
+      - name: Convert AWS rules
+        run: |
+          sigma convert -t splunk --without-pipeline sigma/rules/aws
+          sigma convert -t lucene --without-pipeline sigma/rules/aws
+
       - name: Convert Okta rules
         run: |
           sigma convert -t splunk --without-pipeline sigma/rules/okta

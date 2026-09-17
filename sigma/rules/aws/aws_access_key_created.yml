@@ -1,0 +1,28 @@
+title: AWS IAM Access Key Created
+id: f8582f22-8b13-400b-b3de-a6f4dacdf59f
+status: experimental
+description: |
+    Detects creation of an IAM access key. Long-lived keys are not subject to session
+    expiry or MFA, making them a durable persistence mechanism. Sigma cannot compare
+    the requesting identity against the target user, so triage must confirm whether
+    the key was minted for a different principal.
+references:
+    - https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html
+    - https://attack.mitre.org/techniques/T1098/001/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.persistence
+    - attack.t1098.001
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: 'iam.amazonaws.com'
+        eventName: 'CreateAccessKey'
+    condition: selection
+falsepositives:
+    - Administrators provisioning keys during user onboarding
+    - Automated key rotation tooling
+level: medium

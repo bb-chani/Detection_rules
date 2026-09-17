@@ -1,0 +1,31 @@
+title: AWS CloudTrail Logging Disabled or Deleted
+id: 83f15426-62d2-487c-bffa-023455221904
+status: experimental
+description: |
+    Detects CloudTrail trails being stopped, deleted, or reconfigured. Disabling
+    audit logging is an early step in cloud intrusions because it blinds downstream
+    detection; the event that disables the trail is often the last one recorded.
+references:
+    - https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-delete-trails-console.html
+    - https://attack.mitre.org/techniques/T1685/002/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.defense-impairment
+    - attack.t1685.002
+logsource:
+    product: aws
+    service: cloudtrail
+detection:
+    selection:
+        eventSource: 'cloudtrail.amazonaws.com'
+        eventName:
+            - 'StopLogging'
+            - 'DeleteTrail'
+            - 'UpdateTrail'
+            - 'PutEventSelectors'
+    condition: selection
+falsepositives:
+    - Planned logging configuration changes by cloud platform engineering
+    - Trail migration between regions or accounts
+level: high
