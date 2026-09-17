@@ -2,8 +2,8 @@
 
 ## Rule requirements
 
-Every rule must pass CI before merge. Validation runs on push and pull request
-via [`.github/workflows/validate.yml`](.github/workflows/validate.yml).
+Validation runs on pull requests and on pushes to `main`, via
+[`.github/workflows/validate.yml`](.github/workflows/validate.yml).
 
 ### Sigma
 
@@ -12,8 +12,9 @@ via [`.github/workflows/validate.yml`](.github/workflows/validate.yml).
   `logsource`, `detection`, `falsepositives`, `level`
 - Map to [ATT&CK](https://attack.mitre.org/) via `tags` where applicable
 - `falsepositives` must list real scenarios, not "unknown"
-- Rules must convert cleanly to all three backends (Splunk, Elasticsearch,
-  Microsoft XDR) — CI enforces this
+- Rules must convert cleanly to every backend their platform targets — CI
+  enforces this. Windows rules go to Splunk, Elasticsearch and Microsoft XDR;
+  AWS and Okta rules to Splunk and Elasticsearch
 - File naming: `<category>_<platform>_<behavior>.yml`
 
 ### YARA
@@ -36,8 +37,9 @@ yara <rule>.yar tests/logs/<sample> -c    # must be > 0
 yara <rule>.yar tests/goodware/<sample> -c # must be 0
 ```
 
-Sigma rules are validated with `sigma check` and by successful conversion to all
-backends. Behavioral testing against live telemetry happens in the target SIEM.
+Sigma rules are validated with `sigma check` and by successful conversion to the
+backends their platform targets. Behavioral testing against live telemetry
+happens in the target SIEM.
 
 ## ⚠️ Malicious samples
 
@@ -64,3 +66,8 @@ Commits are SSH-signed and gated by pre-commit hooks: YAML validation,
 
 Rules that are superseded or no longer relevant move to `sigma/deprecated/` or
 `yara/deprecated/` rather than being deleted. Detection history is useful.
+
+Both directories are kept in the tree even while empty, each holding a
+`.gitkeep`, so a deprecation has somewhere to go without restructuring the repo
+first. `sigma/rules-emerging-threats/` is retained on the same basis, for
+time-boxed rules covering an active campaign.
