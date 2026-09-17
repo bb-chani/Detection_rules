@@ -1,0 +1,37 @@
+title: PowerShell Encoded Command Execution
+id: 9e89e28b-e64a-4125-9251-62467e62aa5f
+status: experimental
+description: |
+    Detects PowerShell invoked with a base64-encoded command block. Encoding hides
+    the payload from command-line logging and signature matching, and is common in
+    phishing macro chains and post-exploitation loaders. Legitimate tooling uses it
+    too, so this is a triage signal rather than a standalone alert.
+references:
+    - https://attack.mitre.org/techniques/T1059/001/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.execution
+    - attack.t1059.001
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith:
+            - '\powershell.exe'
+            - '\pwsh.exe'
+        - OriginalFileName:
+            - 'PowerShell.EXE'
+            - 'pwsh.dll'
+    selection_flag:
+        CommandLine|contains:
+            - ' -enc '
+            - ' -EncodedCommand '
+            - ' -e '
+            - ' -ec '
+    condition: all of selection_*
+falsepositives:
+    - Configuration management and deployment tooling that encodes payloads
+    - Scheduled tasks created by legitimate software installers
+level: medium

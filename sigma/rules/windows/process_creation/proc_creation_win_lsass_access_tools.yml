@@ -1,0 +1,33 @@
+title: LSASS Credential Dumping via Known Tooling
+id: 8fd3bea6-e751-4052-a7b7-4c320d1fb20e
+status: experimental
+description: |
+    Detects command lines targeting LSASS for credential extraction, covering
+    comsvcs.dll MiniDump, procdump against lsass, and taskmgr-driven dumps. Process
+    memory is where cached credentials live, so dumping LSASS is the standard step
+    between initial access and lateral movement.
+references:
+    - https://lolbas-project.github.io/lolbas/Libraries/Comsvcs/
+    - https://attack.mitre.org/techniques/T1003/001/
+author: bb-chani
+date: 2026-09-16
+tags:
+    - attack.credential-access
+    - attack.t1003.001
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_comsvcs:
+        CommandLine|contains|all:
+            - 'comsvcs.dll'
+            - 'MiniDump'
+    selection_procdump:
+        CommandLine|contains|all:
+            - 'procdump'
+            - 'lsass'
+    condition: 1 of selection_*
+falsepositives:
+    - Authorized incident response or forensic collection
+    - Crash dump generation during application debugging
+level: high
