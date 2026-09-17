@@ -134,10 +134,8 @@ obvious home and so the deprecation workflow in
 only a `.gitkeep`:
 
 ```
-sigma/rules/azure|gcp/          Further cloud platforms
 sigma/rules-emerging-threats/   Time-boxed rules for active campaigns
 sigma/deprecated/               Retired Sigma rules, kept for audit history
-yara/rules/loader|maldoc/       Further YARA families
 yara/deprecated/                Retired YARA rules
 ```
 
