@@ -118,6 +118,7 @@ yara yara/rules/webshell/webshell_php_generic_eval.yar tests/goodware/benign_get
 Directories holding content today:
 
 ```
+sigma/rules/aws/           AWS CloudTrail rules
 sigma/rules/okta/          Okta system-log rules
 sigma/rules/windows/       Windows process-creation rules
 pipelines/okta_ecs.yml     Okta -> ECS field mapping for the Elastic backend
@@ -133,7 +134,7 @@ obvious home and so the deprecation workflow in
 only a `.gitkeep`:
 
 ```
-sigma/rules/aws|azure|gcp/      Further cloud platforms
+sigma/rules/azure|gcp/          Further cloud platforms
 sigma/rules-emerging-threats/   Time-boxed rules for active campaigns
 sigma/deprecated/               Retired Sigma rules, kept for audit history
 yara/rules/loader|maldoc/       Further YARA families
@@ -173,9 +174,9 @@ All commits are SSH-signed.
 
 *Sigma* — `sigma check sigma/rules`, then conversion of every rule to each
 backend it targets. Windows rules compile to Splunk, Elasticsearch and Microsoft
-XDR; Okta rules to Splunk and to Elasticsearch through
-[`pipelines/okta_ecs.yml`](pipelines/okta_ecs.yml). A rule that cannot be
-expressed on a target backend fails the build.
+XDR; AWS rules to Splunk and Elasticsearch; Okta rules to Splunk and to
+Elasticsearch through [`pipelines/okta_ecs.yml`](pipelines/okta_ecs.yml). A rule
+that cannot be expressed on a target backend fails the build.
 
 *YARA* — each rule compiles individually, `yara/index.yar` compiles so every
 include resolves, and the index is checked for completeness: a rule under
