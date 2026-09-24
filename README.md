@@ -1,17 +1,44 @@
 # Detection_rules
 
-Vendor-neutral detection content written in [Sigma](https://sigmahq.io/) and
-YARA, with CI validation and multi-backend conversion.
+A detection library covering host, file and network telemetry, with CI
+validation for every rule type it holds.
 
-Detections are authored once in a portable format and compiled to the query
-language of whichever platform needs them — no rewriting a rule three times
-for three SIEMs.
+Rules are written in whichever language suits the telemetry rather than forcing
+one format onto every problem, and each is validated by its own toolchain. The
+library grows as detection needs come up; it is not scoped to a fixed set of
+languages or platforms.
 
 ## Why detection-as-code
 
 Detection logic belongs in version control for the same reasons application
 code does: peer review, change history, automated testing, and repeatable
 deployment. Every rule here is linted on commit and validated in CI on every push.
+
+## Rule types
+
+Each language lives in its own folder, grouped into categories, and is checked
+by its own command.
+
+**Sigma** — `sigma/rules/`, by platform and logsource. Log-based detections,
+compiled to the query language of whichever SIEM needs them.
+
+```bash
+sigma check sigma/rules
+```
+
+**YARA** — `yara/rules/`, by family. File and memory detections, with
+[`yara/index.yar`](yara/index.yar) as a single entry point including every rule.
+
+```bash
+yarac yara/index.yar /tmp/compiled.yarc
+```
+
+**Suricata** — `suricata/rules/`, by category. Network detections, numbered
+from the local SID range documented in [`suricata/SIDS.md`](suricata/SIDS.md).
+
+```bash
+suricata -T -c /etc/suricata/suricata.yaml -S suricata/rules/scan/ssh-bruteforce.rules
+```
 
 ## One rule, three platforms
 
@@ -121,6 +148,8 @@ Directories holding content today:
 sigma/rules/aws/           AWS CloudTrail rules
 sigma/rules/okta/          Okta system-log rules
 sigma/rules/windows/       Windows process-creation rules
+suricata/rules/scan/       Suricata network scan rules
+suricata/SIDS.md           SID allocation registry for local rules
 pipelines/okta_ecs.yml     Okta -> ECS field mapping for the Elastic backend
 yara/rules/webshell/       PHP webshell rules
 yara/index.yar             Entry point including every YARA rule
@@ -168,7 +197,8 @@ Two layers run the same checks, locally and again on a clean runner.
 All commits are SSH-signed.
 
 **On push and pull request**, via
-[`validate.yml`](.github/workflows/validate.yml):
+[`validate.yml`](.github/workflows/validate.yml) and
+[`suricata.yml`](.github/workflows/suricata.yml):
 
 *Sigma* — `sigma check sigma/rules`, then conversion of every rule to each
 backend it targets. Windows rules compile to Splunk, Elasticsearch and Microsoft
@@ -181,6 +211,10 @@ include resolves, and the index is checked for completeness: a rule under
 `yara/rules/` with no `include` line fails, as does an `include` pointing at a
 file that no longer exists. Then the sample gates — every rule must match
 something in `tests/logs/` and nothing in `tests/goodware/`.
+
+*Suricata* — every `.rules` file is loaded by `suricata -T` against a stock
+configuration, so a signature that will not parse fails the build. That job is
+filtered on `suricata/**` and stays idle on Sigma and YARA commits.
 
 ## Contributing
 

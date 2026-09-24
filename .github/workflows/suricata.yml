@@ -1,0 +1,25 @@
+name: Validate Suricata
+
+on:
+  push:
+    branches: [main]
+    paths: ['suricata/**']
+  pull_request:
+    branches: [main]
+    paths: ['suricata/**']
+
+jobs:
+  suricata:
+    name: Suricata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Suricata
+        run: sudo apt-get update && sudo apt-get install -y suricata
+
+      - name: Test rules
+        run: |
+          mkdir -p /tmp/suricata-log
+          find suricata -name '*.rules' -print0 \
+            | xargs -0 -r -I{} suricata -T -c /etc/suricata/suricata.yaml -S {} -l /tmp/suricata-log
