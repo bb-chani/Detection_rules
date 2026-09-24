@@ -20,5 +20,6 @@ jobs:
 
       - name: Test rules
         run: |
+          mkdir -p /tmp/suricata-log
           find suricata -name '*.rules' -print0 \
-            | xargs -0 -r -n1 -I{} suricata -T -c /etc/suricata/suricata.yaml -S {}
+            | xargs -0 -r -I{} suricata -T -c /etc/suricata/suricata.yaml -S {} -l /tmp/suricata-log
