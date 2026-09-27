@@ -6,18 +6,26 @@ is numbered in a range nobody else uses.
 
 ## Range
 
-Rules here use **9000000-9999999**, the block reserved for local rules. It sits
-clear of the ranges the public rulesets occupy:
+Rules here use **9000000-9999999**. How that sits against the allocations in
+common use:
 
 | Range | Owner |
 | --- | --- |
-| 1000000-1999999 | Sigs reserved for local use by convention |
-| 2000000-2999999 | Emerging Threats |
-| 3000000-3999999 | Suricata community ruleset |
-| 9000000-9999999 | Local rules — this repository |
+| 1000000-1999999 | Reserved by convention for local/custom rules |
+| 2000000-2099999 | Emerging Threats Open |
+| 2100000-2103999 | ET forks of the original Snort GPL signatures |
+| 2200000-2299999 | Suricata's own engine-event rules |
+| 9000000-9999999 | Local rules — this repository (unallocated block) |
 
-Running ET or the community ruleset alongside this one is therefore safe: no
-SID in this repository can shadow a rule from either.
+The conventional home for local rules is 1000000-1999999. This repository
+deliberately sits outside it, in the 9000000+ block, which is not allocated to
+anyone. That buys one more layer of separation than the convention does: these
+SIDs cannot collide with ET, with the engine-event rules Suricata ships, or
+with someone else's local rules numbered the conventional way on the same
+sensor.
+
+Allocations are catalogued at [sidallocation.org](https://sidallocation.org/),
+the canonical source for who owns which range.
 
 ## Allocation
 
